@@ -8,7 +8,7 @@ $parametersAdd = '';
 foreach($this->parameters as $name => $value){
     $parametersAdd .= '&' . $name . '=' . $value;
 }
-
+//\Zend\Debug\Debug::dump($this->exportRenderers); die(__FILE__);
 foreach($this->exportRenderers as $type => $name){
     $urlExport = $url . '?' . $this->generalParameterNames['rendererType'] . '=' . $type . $parametersAdd;
 ?>

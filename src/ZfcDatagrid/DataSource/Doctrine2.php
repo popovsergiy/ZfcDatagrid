@@ -66,6 +66,7 @@ class Doctrine2 extends AbstractDataSource
 
             $selectColumns[] = $colString;
         }
+        //\Zend\Debug\Debug::dump($colString); die(__METHOD__);
         $qb->resetDQLPart('select');
         $qb->select($selectColumns);
 
@@ -103,6 +104,7 @@ class Doctrine2 extends AbstractDataSource
          * Step 3) Apply filters
          */
         $filterColumn = new Doctrine2\Filter($qb);
+        //\Zend\Debug\Debug::dump([$this->getFilters(), __METHOD__]); //die(__METHOD__);
         foreach ($this->getFilters() as $filter) {
             /* @var $filter \ZfcDatagrid\Filter */
             if ($filter->isColumnFilter() === true) {

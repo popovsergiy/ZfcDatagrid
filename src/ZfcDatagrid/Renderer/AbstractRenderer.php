@@ -677,6 +677,8 @@ abstract class AbstractRenderer implements RendererInterface
         foreach ($this->getToolbarTemplateVariables() as $key => $value) {
             $viewModel->setVariable($key, $value);
         }
+
+
         $viewModel->setVariable('rendererName', $this->getName());
 
         $options               = $this->getOptions();

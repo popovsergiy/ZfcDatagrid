@@ -16,7 +16,6 @@ class DatagridFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $sm)
     {
         $config = $sm->get('config');
-
         if (! isset($config['ZfcDatagrid'])) {
             throw new InvalidArgumentException('Config key "ZfcDatagrid" is missing');
         }
@@ -30,7 +29,9 @@ class DatagridFactory implements FactoryInterface
         if ($sm->has('translator') === true) {
             $grid->setTranslator($sm->get('translator'));
         }
+
         $grid->init();
+
 
         return $grid;
     }

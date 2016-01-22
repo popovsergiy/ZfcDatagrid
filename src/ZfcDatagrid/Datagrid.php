@@ -953,6 +953,7 @@ class Datagrid implements ServiceLocatorAwareInterface
             /**
              * Step 1.3) Filtering
              */
+            //\Zend\Debug\Debug::dump([$renderer->getFilters(), __METHOD__]);
             foreach ($renderer->getFilters() as $filter) {
                 $this->getDataSource()->addFilter($filter);
             }
