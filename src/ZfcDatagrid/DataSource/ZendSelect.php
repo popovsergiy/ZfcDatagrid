@@ -84,6 +84,9 @@ class ZendSelect extends AbstractDataSource
 
         $select = $this->getData();
 
+        //$SqlString = $this->getAdapter()->buildSqlString($select);
+        //\Zend\Debug\Debug::dump($SqlString); //die(__METHOD__);
+
         /*
          * Step 1) Apply needed columns
          */
@@ -94,6 +97,7 @@ class ZendSelect extends AbstractDataSource
             }
 
             $colString = $col->getSelectPart1();
+            //\Zend\Debug\Debug::dump($colString);
             if ($col->getSelectPart2() != '') {
                 $colString = new Expression($platform->quoteIdentifier($colString) . $platform->getIdentifierSeparator() . $platform->quoteIdentifier($col->getSelectPart2()));
             }
@@ -132,6 +136,13 @@ class ZendSelect extends AbstractDataSource
                 $filterColumn->applyFilter($filter);
             }
         }
+
+        //$statement = $sql->prepareStatementForSqlObject($select);
+        //$resultSet = $statement->execute();
+
+        //$SqlString = $this->getAdapter()->buildSqlString($select);
+        //\Zend\Debug\Debug::dump($SqlString); die(__METHOD__);
+
 
         /*
          * Step 4) Pagination

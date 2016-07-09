@@ -953,6 +953,7 @@ class Datagrid implements ServiceLocatorAwareInterface
             /**
              * Step 1.3) Filtering
              */
+            //\Zend\Debug\Debug::dump([$renderer->getFilters(), __METHOD__]);
             foreach ($renderer->getFilters() as $filter) {
                 $this->getDataSource()->addFilter($filter);
             }
@@ -962,8 +963,11 @@ class Datagrid implements ServiceLocatorAwareInterface
          * Step 2) Load the data (Paginator)
          */
         {
-            $this->getDataSource()->execute();
-            $paginatorAdapter = $this->getDataSource()->getPaginatorAdapter();
+            /** @var \ZfcDatagrid\DataSource\Doctrine2 $dataSource */
+            $dataSource = $this->getDataSource();
+            $dataSource->execute();
+
+            $paginatorAdapter = $dataSource->getPaginatorAdapter();
 
             \Zend\Paginator\Paginator::setDefaultScrollingStyle('Sliding');
 
@@ -1065,6 +1069,15 @@ class Datagrid implements ServiceLocatorAwareInterface
 
     /**
      *
+     * @return array
+     */
+    private function getPreparedData()
+    {
+        return $this->preparedData;
+    }
+
+    /**
+     *
      * @throws \Exception
      * @return Paginator
      */
@@ -1075,15 +1088,6 @@ class Datagrid implements ServiceLocatorAwareInterface
         }
 
         return $this->paginator;
-    }
-
-    /**
-     *
-     * @return array
-     */
-    private function getPreparedData()
-    {
-        return $this->preparedData;
     }
 
     /**

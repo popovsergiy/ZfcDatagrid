@@ -28,7 +28,7 @@ class Columns extends AbstractHelper implements ServiceLocatorAwareInterface
      * @param  string $message
      * @return string
      */
-    private function translate($message)
+    protected function translate($message)
     {
         if (false === $this->translator) {
             return $message;
@@ -61,6 +61,7 @@ class Columns extends AbstractHelper implements ServiceLocatorAwareInterface
         $return = [];
 
         foreach ($columns as $column) {
+
             /* @var $column \ZfcDatagrid\Column\AbstractColumn */
 
             $options = [
@@ -151,6 +152,7 @@ class Columns extends AbstractHelper implements ServiceLocatorAwareInterface
             $return[] = '{' . implode(',', $colModel) . '}';
         }
 
+
         return '[' . implode(',', $return) . ']';
     }
 
@@ -159,7 +161,7 @@ class Columns extends AbstractHelper implements ServiceLocatorAwareInterface
      * @param  Column\AbstractColumn $column
      * @return string
      */
-    private function getFormatter(Column\AbstractColumn $column)
+    protected function getFormatter(Column\AbstractColumn $column)
     {
         /*
          * User defined formatter
@@ -203,7 +205,7 @@ class Columns extends AbstractHelper implements ServiceLocatorAwareInterface
      * @throws \Exception
      * @return array
      */
-    private function getStyles(Column\AbstractColumn $col)
+    protected function getStyles(Column\AbstractColumn $col)
     {
         $styleFormatter = [];
 

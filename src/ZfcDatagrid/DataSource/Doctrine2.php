@@ -66,6 +66,7 @@ class Doctrine2 extends AbstractDataSource
 
             $selectColumns[] = $colString;
         }
+        //\Zend\Debug\Debug::dump($colString); die(__METHOD__);
         $qb->resetDQLPart('select');
         $qb->select($selectColumns);
 
@@ -109,6 +110,9 @@ class Doctrine2 extends AbstractDataSource
                 $filterColumn->applyFilter($filter);
             }
         }
+
+        //\Zend\Debug\Debug::dump([$qb->getQuery()->getSQL(), __METHOD__]); die(__METHOD__);
+
 
         /*
          * Step 4) Pagination

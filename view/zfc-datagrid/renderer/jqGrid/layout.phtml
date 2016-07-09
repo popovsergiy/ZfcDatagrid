@@ -167,7 +167,6 @@ if($paginator->getItemCountPerPage() === $paginator->getTotalItemCount()){
     $itemCountPerPage = -1;
 }
 ?>
-
 <?php echo $this->partial($this->templateToolbar);?>
 
 <table id="<?php echo $this->gridId; ?>" class="<?php echo implode(' ', $tableClasses); ?>"></table>
@@ -175,7 +174,106 @@ if($paginator->getItemCountPerPage() === $paginator->getTotalItemCount()){
 
 <iframe name="<?php echo $this->gridId; ?>_fileFrame" id="<?php echo $this->gridId; ?>_fileFrame" src="about:none" style="display: none;"></iframe>
 
+
+<script>
 <?php $this->inlineScript()->captureStart(); ?>
+
+myDefaultSearch = "cn",
+getColumnIndexByName = function (columnName) {
+    var cm = $(this).jqGrid("getGridParam", "colModel"), i, l = cm.length;
+    for (i = 0; i < l; i += 1) {
+        if (cm[i].name === columnName) {
+            return i; // return the index
+        }
+    }
+    return -1;
+},
+
+modifySearchingFilter = function (separator) {
+    var i, l, rules, rule, parts, j, group, str, iCol, cmi, cm = this.p.colModel,
+        filters = this.p.postData.filters === undefined ? null : $.parseJSON(this.p.postData.filters);
+    if (filters && filters.rules !== undefined && filters.rules.length > 0) {
+        rules = filters.rules;
+        for (i = 0; i < rules.length; i++) {
+            rule = rules[i];
+            iCol = getColumnIndexByName.call(this, rule.field);
+            cmi = cm[iCol];
+            if (iCol >= 0 &&
+                ((cmi.searchoptions === undefined || cmi.searchoptions.sopt === undefined)
+                && (rule.op === myDefaultSearch)) ||
+                (typeof (cmi.searchoptions) === "object" &&
+                $.isArray(cmi.searchoptions.sopt) &&
+                cmi.searchoptions.sopt[0] === rule.op)) {
+                // make modifications only for the "contains" operation
+                parts = rule.data.split(separator);
+                if (parts.length > 1) {
+                    if (filters.groups === undefined) {
+                        filters.groups = [];
+                    }
+                    group = {
+                        groupOp: "OR",
+                        groups: [],
+                        rules: []
+                    };
+                    filters.groups.push(group);
+                    for (j = 0, l = parts.length; j < l; j++) {
+                        str = parts[j];
+                        if (str) {
+                            // skip empty "", which exist in case of two separaters of once
+                            group.rules.push({
+                                data: parts[j],
+                                op: rule.op,
+                                field: rule.field
+                            });
+                        }
+                    }
+                    rules.splice(i, 1);
+                    i--; // to skip i++
+                }
+            }
+        }
+        this.p.postData.filters = JSON.stringify(filters);
+    }
+},
+
+dataInitMultiselect = function (elem) {
+    setTimeout(function () {
+        var $elem = $(elem), id = elem.id,
+            inToolbar = typeof id === "string" && id.substr(0, 3) === "gs_",
+            options = {
+                selectedList: 2,
+                height: "auto",
+                checkAllText: "all",
+                uncheckAllText: "no",
+                noneSelectedText: "Any",
+                open: function () {
+                    var $menu = $(".ui-multiselect-menu:visible");
+                    $menu.width("auto");
+                    return;
+                }
+            },
+            $options = $elem.find("option");
+        if ($options.length > 0 && $options[0].selected) {
+            $options[0].selected = false; // unselect the first selected option
+        }
+        if (inToolbar) {
+            options.minWidth = "auto";
+        }
+        $elem.multiselect(options);
+        $elem.siblings("button.ui-multiselect").css({
+            width: inToolbar ? "98%" : "100%",
+            marginTop: "1px",
+            marginBottom: "1px",
+            paddingTop: "3px"
+        });
+    }, 50);
+};
+
+
+
+
+
+
 
 //Row background-color + column background-color
 function grid_<?php echo $this->gridId; ?>_loadComplete(data){
@@ -192,10 +290,23 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
 
 	caption: '<?php echo $this->title; ?>',
 
-	height: 'auto',
+	//width: 'auto',
+	//height: '600px',
+	//height: 'auto',
+	height: function() {
+        var wHeight = $(window).height();
+        var hHeight = $('.header').height();
+        var hlHeight = $('.header-layout').height();
+        var tHeight = $('.context-layout .ui-tabs .ui-tabs-nav').height();
+        var qHeight = wHeight - hHeight - (hlHeight * 2) - (tHeight * 2);
+        var nqHeight = wHeight - (hHeight * 8) - (hHeight / 2);
+        return nqHeight;
+    }(),
 	autowidth : true,
     forceFit : true,
     shrinkToFit : true,
+    //shrinkToFit : false,
+
     gridview : true,
     hoverrows : true,
     viewrecords : true,
@@ -204,16 +315,17 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
     multiselect: true,
     <?php endif; ?>
     
-    grouping: true,
-    
+    grouping: false,
+
+    rownumbers: true,
     rowNum: <?php echo $itemCountPerPage; ?>,
+    //rownumWidth: 25, // the width of the row numbers columns
 
 	mtype : '<?= $parameterNames['method']; ?>',
-    postData: {
-        <?php
-        echo implode(',', $parametersHtml);
-        ?>
-    },
+
+    <?php if ($parametersHtml) : ?>
+    postData: { <?php echo implode(',', $parametersHtml); ?>},
+    <?php endif; ?>
 	
 	
 	sortname: '<?php echo $this->activeParameters[$parameterNames['sortColumns']]; ?>',
@@ -232,8 +344,10 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
     colModel: <?php echo $this->jqgridColumns($this->columns); ?>,
 
     datatype : 'local',
+    <?php if ($this->data['total']) : ?>
     data: {data: <?php echo json_encode($this->data); ?>},
-    
+    <?php endif; ?>
+
     jsonReader : {
         repeatitems : false,
         id : 'idConcated',
@@ -267,6 +381,7 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
 
     <?php if($rowClickLink != ''): ?>
         onSelectRow: function(rowId, status, e){
+            $(this).trigger('jqGrid.onSelectRow');
         	var colModel = grid_<?php echo $this->gridId; ?>.jqGrid('getGridParam','colModel');
         	var name = colModel[$.jgrid.getCellIndex(e.target)];
         	var colIndex = name.index;
@@ -284,8 +399,8 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
 
     loadComplete: function (data) {
     	//custom pagination
-    	var paginator = <?php echo $this->gridId; ?>_customPaginator('<?php echo $this->gridId; ?>');
-    	$('#<?php echo $this->gridId; ?>_pager_center').html(paginator);
+        var paginator = <?php echo $this->gridId; ?>_customPaginator('<?php echo $this->gridId; ?>');
+        $('#<?php echo $this->gridId; ?>_pager_center').html(paginator);
     	
         <?php if($styleString != ''): ?>
         if(data !== undefined){
@@ -293,22 +408,49 @@ var grid_<?php echo $this->gridId; ?> = $('#<?php echo $this->gridId; ?>').jqGri
             grid_<?php echo $this->gridId; ?>_loadComplete(data);
         }
         <?php endif; ?>
+        $(this).trigger('jqGrid.loadComplete');
     },
     
     beforeSelectRow: function (rowId, e) {
+        $(this).trigger('jqGrid.beforeSelectRow');
         return true;
+    },
+
+    beforeRequest: function () {
+        $(this).trigger('jqGrid.beforeRequest');
+        modifySearchingFilter.call(this, ',');
     }
 });
 <?php if($this->isUserFilterEnabled === true):?>
-    grid_<?php echo $this->gridId; ?>.jqGrid('filterToolbar');
+//grid_<?php echo $this->gridId; ?>.jqGrid('filterToolbar');
+grid_<?php echo $this->gridId; ?>.jqGrid("filterToolbar", {
+    stringResult: true,
+    searchOnEnter: true,
+    defaultSearch: myDefaultSearch,
+    beforeClear: function () {
+        $(this.grid.hDiv).find(".ui-search-toolbar .ui-search-input>select[multiple] option").each(function () {
+            this.selected = false; // unselect all options
+        });
+
+        $(this.grid.hDiv).find(".ui-search-toolbar button.ui-multiselect").each(function () {
+            $(this).prev("select[multiple]").multiselect("refresh");
+        }).css({
+            width: "98%",
+            marginTop: "1px",
+            marginBottom: "1px",
+            paddingTop: "3px"
+        });
+    }
+});
 <?php endif; ?>
 
+<?php if ($this->data['total']) : ?>
 /*
  * The first page is loaded directly without ajax, that's why it's here complicated...
  * @todo find something "smarter"
  */
 grid_<?php echo $this->gridId; ?>.jqGrid('setGridParam', {
-    datatype : 'json',
+    datatype : 'json'
 }).trigger('reload');
 grid_<?php echo $this->gridId; ?>.jqGrid()[0].addJSONData(grid_<?php echo $this->gridId; ?>.jqGrid('getGridParam', 'data'));
 grid_<?php echo $this->gridId; ?>.trigger('reload');
@@ -317,5 +459,7 @@ grid_<?php echo $this->gridId; ?>_loadComplete(grid_<?php echo $this->gridId; ?>
 //custom pagination
 var paginator = <?php echo $this->gridId; ?>_customPaginator('<?php echo $this->gridId; ?>');
 $('#<?php echo $this->gridId; ?>_pager_center').html(paginator);
+<?php endif; ?>
 
 <?php $this->inlineScript()->captureEnd(); ?>
+</script>

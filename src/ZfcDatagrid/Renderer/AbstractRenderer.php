@@ -304,6 +304,16 @@ abstract class AbstractRenderer implements RendererInterface
     }
 
     /**
+     * The prepared data
+     *
+     * @param array $data
+     */
+    public function setData(array $data)
+    {
+        $this->data = $data;
+    }
+
+    /**
      * Calculate the sum of the displayed column width to 100%
      *
      * @param array $columns
@@ -324,16 +334,6 @@ abstract class AbstractRenderer implements RendererInterface
             $widthSum += (($column->getWidth() / $relativeOnePercent));
             $column->setWidth(($column->getWidth() / $relativeOnePercent));
         }
-    }
-
-    /**
-     * The prepared data
-     *
-     * @param array $data
-     */
-    public function setData(array $data)
-    {
-        $this->data = $data;
     }
 
     /**
@@ -677,6 +677,8 @@ abstract class AbstractRenderer implements RendererInterface
         foreach ($this->getToolbarTemplateVariables() as $key => $value) {
             $viewModel->setVariable($key, $value);
         }
+
+
         $viewModel->setVariable('rendererName', $this->getName());
 
         $options               = $this->getOptions();

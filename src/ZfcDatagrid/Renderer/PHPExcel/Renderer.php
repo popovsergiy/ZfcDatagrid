@@ -12,6 +12,7 @@ use PHPExcel_Style_Border;
 use PHPExcel_Style_Color;
 use PHPExcel_Style_Fill;
 use PHPExcel_Worksheet_PageSetup;
+use PHPExcel_Worksheet;
 use Zend\Http\Headers;
 use Zend\Http\Response\Stream as ResponseStream;
 use ZfcDatagrid\Renderer\AbstractExport;
@@ -260,10 +261,10 @@ class Renderer extends AbstractExport
     /**
      * Calculates the column width, based on the papersize and orientation
      *
-     * @param \PHPExcel_Worksheet $sheet
-     * @param array               $columns
+     * @param PHPExcel_Worksheet $sheet
+     * @param array              $columns
      */
-    protected function calculateColumnWidth(\PHPExcel_Worksheet $sheet, array $columns)
+    protected function calculateColumnWidth(PHPExcel_Worksheet $sheet, array $columns)
     {
         // First make sure the columns width is 100 "percent"
         $this->calculateColumnWidthPercent($columns);

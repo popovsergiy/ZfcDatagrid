@@ -221,7 +221,7 @@ class PrepareData
                     array_walk_recursive($row[$col->getUniqueId()], function (&$value) {
                         $value = trim($value);
                     });
-                } else {
+                } elseif (is_scalar($row[$col->getUniqueId()])) {
                     $row[$col->getUniqueId()] = trim($row[$col->getUniqueId()]);
                 }
 

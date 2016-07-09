@@ -55,6 +55,7 @@ class Button extends AbstractAction
 
         $label = $this->getLabel();
         if ($label instanceof AbstractColumn) {
+            //\Zend\Debug\Debug::dump([$label->getUniqueId(), $row]);
             $label = $row[$label->getUniqueId()];
         }
 

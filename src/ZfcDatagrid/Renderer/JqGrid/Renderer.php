@@ -126,19 +126,37 @@ class Renderer extends AbstractRenderer
 
         $request  = $this->getRequest();
         $isSearch = $request->getPost($parameterNames['isSearch'], $request->getQuery($parameterNames['isSearch']));
+
+
+        //$this->prepareRawFilters($request->getPost('filters'));
+
+
         if ('true' == $isSearch) {
             // User filtering
+
+
+            $values = $this->prepareFilter(json_decode($request->getPost('filters'), true));
+
             foreach ($this->getColumns() as $column) {
+                //\Zend\Debug\Debug::dump([$column->getUniqueId(), __METHOD__ ]);
                 /* @var $column \ZfcDatagrid\Column\AbstractColumn */
                 if ($request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId())) != '') {
+                    //$value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
                     $value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
 
-                    $filter = new \ZfcDatagrid\Filter();
-                    $filter->setFromColumn($column, $value);
+                    //$filter = new \ZfcDatagrid\Filter();
+                    //$filter->setFromColumn($column, $value);
+                    //$filters[] = $filter;
+
+                    $filters[] = $this->createFilter($column, $value);
+
+                    //$column->setFilterActive($filter->getDisplayColumnValue());
+                } elseif ($values !== null && isset($values[$column->getUniqueId()])) {
+                    $value = implode(',', $values[$column->getUniqueId()]['values']);
+                    $filter = $this->createFilter($column, $value);
+                    //\Zend\Debug\Debug::dump($filter->getValues()); die(__METHOD__);
 
                     $filters[] = $filter;
-
-                    $column->setFilterActive($filter->getDisplayColumnValue());
                 }
             }
         }
@@ -152,6 +170,55 @@ class Renderer extends AbstractRenderer
 
         return $this->filters;
     }
+
+    public function createFilter($column, $value) {
+        /* @var $column \ZfcDatagrid\Column\AbstractColumn */
+        $filter = new \ZfcDatagrid\Filter();
+        $filter->setFromColumn($column, $value);
+        $column->setFilterActive($filter->getDisplayColumnValue());
+
+        return $filter;
+    }
+
+    /*public function prepareRawFilters() {
+        $request = $this->getRequest();
+        $rawFilters = json_decode($request->getPost('filters'), true);
+
+        $filters = $this->prepareFilter($rawFilters);
+
+        \Zend\Debug\Debug::dump([$filters]); die(__METHOD__);
+
+
+        return $filters;
+    }*/
+
+    public function prepareFilter($rawFilters) {
+        static $fields = [];
+        //\Zend\Debug\Debug::dump($rawFilters); die(__METHOD__ . __LINE__);
+
+        foreach ($rawFilters as $key => $values) {
+            if ($values && $key === 'rules') {
+                //\Zend\Debug\Debug::dump([$key, $values]); //die(__METHOD__);
+                foreach ($values as $rule) {
+                    if (!isset($fields[$rule['field']])) {
+                        $fields[$rule['field']] = [];
+                    }
+                    $fields[$rule['field']]['values'][] = $rule['data'];
+                    //$fields[$rule['field']]['values'] .= ',' . $rule['data'];
+                    //\Zend\Debug\Debug::dump($fields); die(__METHOD__);
+                }
+            }
+            if ($values && $key === 'groups') {
+                foreach ($values as $sub) {
+                    $this->prepareFilter($sub);
+                }
+            }
+        }
+        //\Zend\Debug\Debug::dump($fields); die(__METHOD__ . __LINE__);
+
+        return $fields;
+    }
+
 
     public function getCurrentPageNumber()
     {
@@ -203,21 +270,23 @@ class Renderer extends AbstractRenderer
 
         foreach ($data as &$row) {
             foreach ($this->getColumns() as $column) {
+
                 if ($column instanceof Column\Select) {
                     // $row[$column->getUniqueId()] = nl2br($row[$column->getUniqueId()], true);
                 } elseif ($column instanceof Column\Action) {
                     /* @var $column \ZfcDatagrid\Column\Action */
 
-                    $actions = [];
-                    foreach ($column->getActions() as $action) {
-                        /* @var $action \ZfcDatagrid\Column\Action\AbstractAction */
-                        if ($action->isDisplayed($row) === true) {
-                            $action->setTitle($this->getTranslator()->translate($action->getTitle()));
-                            $actions[] = $action->toHtml($row);
+                    if ($columnActions = $column->getActions()) {
+                        $actions = [];
+                        foreach ($columnActions as $action) {
+                            /* @var $action \ZfcDatagrid\Column\Action\AbstractAction */
+                            if ($action->isDisplayed($row) === true) {
+                                $action->setTitle($this->getTranslator()->translate($action->getTitle()));
+                                $actions[] = $action->toHtml($row);
+                            }
                         }
+                        $row[$column->getUniqueId()] = implode(' ', $actions);
                     }
-
-                    $row[$column->getUniqueId()] = implode(' ', $actions);
                 } elseif ($column instanceof Column\Action\Icon) {
                     $row[$column->getUniqueId()] = $column->getIconClass();
                 }

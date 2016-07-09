@@ -1,8 +1,8 @@
 <?php
 namespace ZfcDatagrid\Column\Formatter;
 
-use ZfcDatagrid\Column\AbstractColumn;
 
+use ZfcDatagrid\Column\AbstractColumn;
 abstract class AbstractFormatter
 {
     /** @var array */
